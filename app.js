@@ -23,4 +23,21 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
+/******/
+
+const mongoose = require('mongoose');
+
+const DB_HOST =
+  'mongodb+srv://Nazarii:vBZQ7MxJriuxo84p@cluster0.ox2cy.mongodb.net/Online_Phone_Contacts?retryWrites=true&w=majority';
+
+mongoose
+  .connect(DB_HOST)
+  .then(() => {
+    console.log('database connect success');
+  })
+  .catch(error => {
+    console.log(error.message);
+    process.exit(1);
+  });
+
 module.exports = app;
