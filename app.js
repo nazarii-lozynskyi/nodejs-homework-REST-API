@@ -26,6 +26,9 @@ app.use((err, req, res, next) => {
 /******/
 
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
 
 const { DB_HOST } = process.env;
 
