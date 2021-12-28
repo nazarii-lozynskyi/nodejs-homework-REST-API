@@ -3,19 +3,14 @@ const router = express.Router();
 
 const { NotFound, BadRequest } = require('http-errors');
 
-const Joi = require('joi');
+//const Joi = require('joi');
+const { joiSchema } = require('../../model/contact');
 
-const contactsOperations = require('../../model/contacts');
-
-const joiSchema = Joi.object({
-  name: Joi.string().required(),
-  email: Joi.string().required(),
-  phone: Joi.string().required(),
-});
+const { Contact } = require('../../model');
 
 router.get('/', async (req, res, next) => {
   try {
-    const contacts = await contactsOperations.getAll();
+    const contacts = await Contact.find();
     res.json(contacts);
   } catch (error) {
     next(error);
@@ -26,7 +21,7 @@ router.get('/:id', async (req, res, next) => {
   const { id } = req.params;
 
   try {
-    const contact = await contactsOperations.getById(id);
+    const contact = await Contact.findById(id);
 
     if (!contact) {
       throw new NotFound();
@@ -34,6 +29,9 @@ router.get('/:id', async (req, res, next) => {
 
     res.json(contact);
   } catch (error) {
+    if (error.message.includes('Cast to ObjectId failed')) {
+      error.status = 404;
+    }
     next(error);
   }
 });
@@ -46,25 +44,27 @@ router.post('/', async (req, res, next) => {
       throw new BadRequest(error.message);
     }
 
-    const newContact = await contactsOperations.add(req.body);
+    const newContact = await Contact.create(req.body);
     res.status(201).json(newContact);
   } catch (error) {
+    if (error.message.includes('Cast to ObjectId failed')) {
+      error.status = 400;
+    }
     next(error);
   }
 });
 
 router.put('/:id', async (req, res, next) => {
   try {
-    const { error } = joiSchema.validate(req.body);
+    //const { error } = joiSchema.validate(req.body);
 
-    if (error) {
-      throw new BadRequest(error.message);
-    }
+    //if (error) {
+    //  throw new BadRequest(error.message);
+    //}
 
     const { id } = req.params;
-    const updateContact = await contactsOperations.updateById({
-      id,
-      ...req.body,
+    const updateContact = await Contact.findByIdAndUpdate(id, req.body, {
+      new: true,
     });
 
     if (!updateContact) {
@@ -73,6 +73,37 @@ router.put('/:id', async (req, res, next) => {
 
     res.json(updateContact);
   } catch (error) {
+    if (error.message.includes('Cast to ObjectId failed')) {
+      error.status = 400;
+    }
+
+    next(error);
+  }
+});
+
+router.patch('/:id/favorite', async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { favorite } = req.body;
+
+    const updateContact = await Contact.findByIdAndUpdate(
+      id,
+      { favorite },
+      {
+        new: true,
+      }
+    );
+
+    if (!updateContact) {
+      throw new NotFound();
+    }
+
+    res.json(updateContact);
+  } catch (error) {
+    if (error.message.includes('Cast to ObjectId failed')) {
+      error.status = 400;
+    }
+
     next(error);
   }
 });
@@ -81,7 +112,7 @@ router.delete('/:id', async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const deleteContact = await contactsOperations.removeById(id);
+    const deleteContact = await Contact.findByIdAndRemove(id);
 
     if (!deleteContact) {
       throw new NotFound();
