@@ -23,4 +23,23 @@ app.use((err, req, res, next) => {
   res.status(status).json({ message });
 });
 
+/******/
+
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+dotenv.config();
+
+const { DB_HOST } = process.env;
+
+mongoose
+  .connect(DB_HOST)
+  .then(() => {
+    console.log('database connect success');
+  })
+  .catch(error => {
+    console.log(error.message);
+    process.exit(1);
+  });
+
 module.exports = app;
